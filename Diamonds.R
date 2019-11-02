@@ -304,3 +304,13 @@ Warning in install.packages :
 [1] "Thu Oct 31 13:34:51 2019"
 > head(diamonds, n=6)
 
+
+
+# this is copied and pasted text from the console and does not run 
+# it cant be made to work easily, giving only 90% credit. 
+
+# i have added a demo script to your repository to show how this should look. 
+# I also note that you created an R project to do this which adds some additional features 
+# but can also be a little complicated 
+# you also did not include your name in the script file name
+
