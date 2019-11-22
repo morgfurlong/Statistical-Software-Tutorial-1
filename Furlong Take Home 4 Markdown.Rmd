@@ -1,0 +1,156 @@
+# clear console, global environment  ----
+rm(list = ls())
+cat("\014")  #sends 'CTRL + L' to console oprional
+
+---
+title: "Furlong_Take_Home3"
+author: "Morgan Furlong"
+date: "11/18/2019"
+output: html_document
+html_notebook: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include = FALSE}
+#-------------------------------------------------------------------------
+# Take home assigment 4: Mosquito Control in Ghana          
+#    M. Furlong 21 November 2019  mfurlon@tulane.edu
+
+#    This script contains the code used to anaylze the effect of insecticide use (applyed to bed nets) on childhood mortality from Malaria in Ghana as part of take home assignment 4
+
+#   Dependencies: Script requires use of the tidyverse and devtools packages. All other function calls are contained in base R installs as of version 3.5.3    
+#-------------------------------------------------------------------------
+```
+
+#compile date and session info 
+
+```{r docinfo, echo=FALSE}
+#run libraries 
+library(reprex)
+
+#install.packages("Hmisc") 
+library(Hmisc)
+
+#print and get run time 
+date()
+current_date <- date()
+
+#session info 
+devtools::session_info()
+sessionInfo()
+
+```
+
+# Loading data 
+
+```{r load, echo=FALSE}
+data_df <- read_csv("~/Desktop/Intro to Stats Packages/Statistical Software Tutorial 1/ghana_bednet_malaria.csv")[ ,1:8]
+
+```
+
+
+# Data Summarization 
+
+```{r summary, echo=FALSE}
+
+summary(data_df)
+
+```
+
+#Question 1: This dataset contains 26,342 observations. 
+
+#Question 2: This dataset contains 8 variables. 
+
+```{r describe, echo=TRUE }
+
+describe(data_df[7])
+
+```
+
+#Question 3: 50.5% of the children represented in this study are male.
+
+```{r sum, echo=TRUE}
+describe(data_df$follyr)
+
+follyr_female <- data_df %>% filter(sex == 1)
+
+describe(follyr_female)
+
+sum(follyr_female$follyr, na.rm = TRUE)
+
+```
+
+#Question 4: The total number of years of follow-up experienced by female children in intervention areas was 16,473. 
+
+```{r calculation, echo=TRUE}
+
+outcome_52 <- data_df %>% filter(cluster == 52)
+
+describe(outcome_52)
+
+typeof(outcome_52$outcome)
+
+typeof(outcome_52$sex)
+
+storage.mode(outcome_52$outcome) <- "character"
+
+typeof(outcome_52$outcome)
+
+describe(outcome_52$outcome)
+
+```
+
+#Question 5: 2.4% of children in cluster 52, an intervention cluster, died during follow-up. 
+
+```{r analysis, echo=TRUE}
+
+mean(data_df$agemn)
+
+sd(data_df$agemn, na.rm = FALSE)
+
+```
+
+#Question 6: The average subject age was 25.3 months old (sd = 18.02)
+
+
+# Calculate mortality rate in control and intervention arm 
+```{r}
+
+control_mort <- data_df %>% filter(bednet == 0)
+intervention_mort <- data_df %>% filter(bednet == 1)
+
+control_mortrate <- control_mort %>% filter(outcome == 1)
+intervention_mortrate <- intervention_mort %>% filter(outcome == 1)
+
+control_mortality_rate <- nrow(control_mortrate) / sum(control_mort$follyr, na.rm = TRUE)
+
+intervention_mortality_rate <- nrow(intervention_mortrate) / sum(intervention_mort$follyr, na.rm = TRUE)
+
+
+```
+
+# Question 7: The mortality rate of the intervention arm is 2.4% compared to 2.8% in the control arm. 
+
+```{r }
+
+data_df %>% group_by(cluster) %>%
+  summarise(prop = sum(outcome, na.rm = TRUE)/n()) %>%
+  barplot(prop ~ cluster, data = ., main = "Proportion Died per Cluster")
+
+```
+#Question 8: Bar graph showing proportion of subjects who died in each cluster. 
+
+```{r logistic model, echo=TRUE}
+
+logitmod <- glm(data_df$outcome ~ data_df$bednet, family = binomial(link = "logit"))
+
+print(logitmod) 
+
+```
+#Question 9: Regression Summary 
+
+#Question 10: The subjects in the intervention cluster demonstrated a 17% reduction in mortality (RR = 0.83; 95% CI: 0.69-1.00; p = 0.05). (Risk ratio is used since the health outcome is common). 
+
+
+
