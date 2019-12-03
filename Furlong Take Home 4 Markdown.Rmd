@@ -29,8 +29,6 @@ html_notebook: default
 #run libraries 
 library(reprex)
 library(tidyverse)
-
-#install.packages("Hmisc") 
 library(Hmisc)
 
 #print and get run time 
@@ -79,6 +77,8 @@ follyr_female <- data_df %>% filter(sex == 1)
 describe(follyr_female)
 
 sum(follyr_female$follyr, na.rm = TRUE)
+#this answer is incorrect, you neglected to include time contributed from female participants who are also from intervention areas (bednet=1); thus there are two conditions you are working with for this calculation
+#the sex variable also needed to be cleaned up as there were 5 entries denoted as "F" which belonged in the female category and one missing value which would be denoted as NA (standard denotation for missing values in R)
 
 ```
 
@@ -128,7 +128,9 @@ control_mortality_rate <- nrow(control_mortrate) / sum(control_mort$follyr, na.r
 
 intervention_mortality_rate <- nrow(intervention_mortrate) / sum(intervention_mort$follyr, na.rm = TRUE)
 
-
+#your figures on death and time contributed are all correct; your interpretation is not completely correct
+#you report mortality as a percent in your response; however you calculated rates therefore do not confuse or use proportions and rates interchangeable as they are different measures of association
+#your below answer would be 2.4 deaths per 100 person-years in the intervention group...
 ```
 
 # Question 7: The mortality rate of the intervention arm is 2.4% compared to 2.8% in the control arm. 
@@ -139,19 +141,26 @@ data_df %>% group_by(cluster) %>%
   summarise(prop = sum(outcome, na.rm = TRUE)/n()) %>%
   barplot(prop ~ cluster, data = ., main = "Proportion Died per Cluster")
 
+#great job on the bar graph, the only element missing is distinguishing between which deaths were from the clusters who had an intervention (bednets) and clusters who did not receive an intervention
+
 ```
 #Question 8: Bar graph showing proportion of subjects who died in each cluster. 
 
 ```{r logistic model, echo=TRUE}
 
 logitmod <- glm(data_df$outcome ~ data_df$bednet, family = binomial(link = "logit"))
+#the glm function requires you to have the outcome (dependent) variable as your first argument, then the independent variable (bednet) and then at the end the name of the dataset
+#see lecture 21 on cleaning data
 
 print(logitmod) 
+
+#use summary function to obtain p-values and complete analysis of logistic regression
+summary(logitmod)
 
 ```
 #Question 9: Regression Summary 
 
 #Question 10: The subjects in the intervention cluster demonstrated a 17% reduction in mortality (RR = 0.83; 95% CI: 0.69-1.00; p = 0.05). (Risk ratio is used since the health outcome is common). 
 
-
+#there was reduction in the probability of death among children in intervention areas; however, 0.83 is the odds ratio as we are performing a logistic regression
 
