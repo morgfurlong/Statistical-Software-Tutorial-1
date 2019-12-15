@@ -1,0 +1,244 @@
+---
+title: "Furlong Exam 3"
+author: "Morgan Furlong"
+date: "'r format(Sys.time(), '%d %B %Y')'"
+output: html_notebook
+  html document: 
+  df_print: paged 
+  word_document: default 
+  html_motebook: default 
+  pdf_document: default 
+editor_options: 
+  chunk_output_type: inline 
+---
+
+```{r docinfo, echo = FALSE}
+
+#get runtime 
+date()
+
+#session info 
+sessionInfo()
+
+#loading required packages 
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(Hmisc)
+
+```
+
+```{r import, echo=FALSE}
+
+#Import data  
+crime <- read_csv("~/Downloads/nola_crime_2018.csv")
+
+class(crime)
+
+#dataset on New Orleans crime statistics 2018 
+
+```
+
+Question 1: 
+9,970 observations
+
+Question 2: 
+24 variables 
+
+```{r, echo=FALSE}
+
+Unique <- unique(crime$Item_Number)
+length(Unique)
+
+```
+Question 3: 
+Out of the 9,970 item numbers, 9,384 are unique 
+
+```{r, echo=FALSE}
+
+crime <- crime[!duplicated(crime$Item_Number), ]
+
+Irish <- crime %>% 
+  filter(crime$GNOCDC_LAB == "IRISH CHANNEL") %>% select(Signal_Description) 
+
+sort(Irish$Signal_Description)
+
+```
+
+Question 4: Out of the 43 offense reports described in the Irish Channel, 1 was categorized as "aggravated". 
+
+```{r, echo=FALSE}
+
+neighbor <- group_by(crime, GNOCDC_LAB)
+class(neighbor)
+
+neigh <- summarise(neighbor, Item_Number = n()) %>% arrange(Item_Number)
+neigh
+
+tail(neigh)
+
+```
+Question 5: Little Woods and the French Quarter have the largest number of reported crimes compared to other neighborhoods. 
+
+```{r, echo=FALSE}
+
+population <- crime %>% select(GNOCDC_LAB, pop) %>% group_by(GNOCDC_LAB) %>% summarise(mean_pop = mean(pop, na.rm = TRUE))
+
+population <- population[order(population$GNOCDC_LAB),]
+population
+neigh <- neigh[order(neigh$GNOCDC_LAB),]
+neigh
+
+rate <- ((neigh$Item_Number / population$mean_pop) * 1000) 
+rate
+
+```
+
+Question 6: Table 1. Comparing crime abundance and rate per 1000 persons in New Orleans, LA (2018)
+```{r table, echo=TRUE}
+
+rate <- cbind(neigh,rate) 
+colnames(rate) [1] <- "Neighborhood"
+colnames(rate) [2] <- "Number of Crime Reports"
+colnames(rate) [3] <- "Rate of Crime per 1000 Persons"
+rate
+
+
+```
+
+```{r, echo=FALSE}
+
+arr_population <- population %>% arrange(mean_pop)
+tail(arr_population)
+
+```
+Question 7: The largest neighborhood by population in the dataset is Little Woods with a total population of 44,947 persons. 
+
+```{r, echo=FALSE}
+
+arr_rate <- rate %>% arrange(`Rate of Crime per 1000 Persons`)
+head(arr_rate)
+population %>% filter(GNOCDC_LAB == "LAKEWOOD")
+
+```
+Question 8: Lakewood, with a population size of 13,989 and crime report number of 10, had the lowest crime rate of 0.71 per 1000 persons. 
+
+
+```{r creating value, echo=FALSE}
+
+ratio <- rate$`Rate of Crime per 1000 Persons`
+
+```
+
+```{r rate ratio, echo=TRUE }
+Lakewood <- ratio / 0.71
+Lakewood
+
+FrenchQuarter <- ratio / 44.16
+FrenchQuarter
+
+```
+Question 9: Table 2. Rate ratio with Lakewood Population as reference. 
+
+Question 10: Table 3. Rate ratio with French Quarter population as reference. 
+
+```{r, echo=FALSE}
+
+sort(table(crime$Signal_Description),decreasing = TRUE)
+sort(table(crime$Charge_Description),decreasing = TRUE)
+
+```
+
+Question 11: Domestic disturbance was the most common cause for a police report to be filed, but the most common charge that was filed is theft. 
+
+```{r, echo=FALSE}
+
+dom <- neighbor %>% select(Signal_Description, GNOCDC_LAB, pop)
+dom %>% group_by(GNOCDC_LAB) 
+dom %>% summarise(mean_pop = mean(pop, na.rm = TRUE))
+domestic <- dom %>% filter(str_detect(Signal_Description,"DOMESTIC")) 
+domesticdisturbance <- domestic %>% count(Signal_Description) %>% group_by(GNOCDC_LAB) %>% summarise(n = sum(n))
+
+ddrate <- ((domesticdisturbance$n / population$mean_pop) * 1000) 
+ddrate
+```
+
+```{r table, echo=TRUE}
+
+cbind(domesticdisturbance$GNOCDC_LAB,ddrate)
+```
+Question 12: Table 4. The rate of domestic disturbance by neighborhood in New Orleans, LA. 
+
+```{r, echo=FALSE}
+#rate of all crimes per neighborhood based on average age of victims 
+
+reg <- neighbor %>% select(Victim_Age,GNOCDC_LAB) %>% group_by(GNOCDC_LAB) %>% summarise(Victim_Age = mean(Victim_Age, na.rm = TRUE))
+
+```
+
+```{r regression, echo=TRUE}
+
+linearmod <- lm(rate$`Rate of Crime per 1000 Persons` ~ reg$Victim_Age)      
+print(linearmod)
+summary(linearmod)
+```
+Question 13: Linear Regression Model (Above)
+```{r tabulate, echo=FALSE}
+
+hypo <- (rate$`Rate of Crime per 1000 Persons`) / (population$mean_pop)
+hypo
+hypothesis <- cbind(population$GNOCDC_LAB,hypo) 
+
+
+
+```
+
+Question 14: When comparing rates of crime reports to population, Village de Lest may have the worst police responsiveness. 
+
+```{r histogram, echo=TRUE}
+
+pois <- rpois(10000, lambda = 4.7)
+hist(pois, main = "Histogram of Randomly Distributed Poisson", xlab = "events (x)")
+
+```
+Question 15: Figure 1: Poisson distribution of randomly distributed variable where lambda = 4.7. 
+
+```{r loop, echo=TRUE}
+
+iris
+species <- split(iris,iris$Species)
+str(species)
+res <- list()
+for(n in names(species)){
+  data <- species[[n]]
+  res[[n]] <- data.frame(species=n, mean.sepal.length=mean(data$Sepal.Length))
+}  
+print(res)
+```
+Question 16: The average sepal length for the three species of irises are printed above. 
+
+```{r plot, echo=TRUE}
+
+cars <-data.frame(mtcars)
+scatter.smooth(cars$mpg,cars$disp)
+ggplot(mtcars) +
+  geom_point(aes(x = mpg, y = disp, color = cyl)) + labs(title = "Comparison of Car Performance", x = "mpg", y = "displacement (cu.in)") 
+```
+Question 17: Figure 2: Comparison of car performance based on displacement and number of cylinders and their effect on miles per gallon. (legend = number of cylinders)
+
+
+```{r vector, echo = TRUE}
+
+x <- c(-4.89, -1.93, -1.11, 3.94, 0.46, -3.85, -0.20, 6.04,9.36, 7.26, 4.88, 13.45, -2.93, 6.39, -16.22, -3.24, 6.86, 11.87, 1.81, -2.54)
+
+u <- mean(x)
+u
+o <- sd(x)
+o
+
+Z <- (x-u)/o
+Z
+```
+Question 18: The Z scores for the specified vector are above. 
+
+
