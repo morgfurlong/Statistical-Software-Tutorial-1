@@ -58,6 +58,7 @@ Out of the 9,970 item numbers, 9,384 are unique
 
 crime <- crime[!duplicated(crime$Item_Number), ]
 
+#code errors with sort f(x) and creating irish object; partial credit granted for correct answer written out
 Irish <- crime %>% 
   filter(crime$GNOCDC_LAB == "IRISH CHANNEL") %>% select(Signal_Description) 
 
@@ -74,8 +75,9 @@ class(neighbor)
 
 neigh <- summarise(neighbor, Item_Number = n()) %>% arrange(Item_Number)
 neigh
-
+#error as n() should only be called in a data context)
 tail(neigh)
+#object neigh not found
 
 ```
 Question 5: Little Woods and the French Quarter have the largest number of reported crimes compared to other neighborhoods. 
@@ -89,8 +91,9 @@ population
 neigh <- neigh[order(neigh$GNOCDC_LAB),]
 neigh
 
-rate <- ((neigh$Item_Number / population$mean_pop) * 1000) 
+rate <- ((neigh$Item_Number * 1000/ population$mean_pop) ) 
 rate
+#various code errors
 
 ```
 
@@ -154,6 +157,7 @@ Question 11: Domestic disturbance was the most common cause for a police report 
 ```{r, echo=FALSE}
 
 dom <- neighbor %>% select(Signal_Description, GNOCDC_LAB, pop)
+#error in select f(x)
 dom %>% group_by(GNOCDC_LAB) 
 dom %>% summarise(mean_pop = mean(pop, na.rm = TRUE))
 domestic <- dom %>% filter(str_detect(Signal_Description,"DOMESTIC")) 
@@ -178,7 +182,8 @@ reg <- neighbor %>% select(Victim_Age,GNOCDC_LAB) %>% group_by(GNOCDC_LAB) %>% s
 
 ```{r regression, echo=TRUE}
 
-linearmod <- lm(rate$`Rate of Crime per 1000 Persons` ~ reg$Victim_Age)      
+linearmod <- lm(rate$`Rate of Crime per 1000 Persons` ~ reg$Victim_Age)     
+#revisit formula for lm f(x)
 print(linearmod)
 summary(linearmod)
 ```
@@ -221,8 +226,11 @@ Question 16: The average sepal length for the three species of irises are printe
 
 cars <-data.frame(mtcars)
 scatter.smooth(cars$mpg,cars$disp)
+
 ggplot(mtcars) +
-  geom_point(aes(x = mpg, y = disp, color = cyl)) + labs(title = "Comparison of Car Performance", x = "mpg", y = "displacement (cu.in)") 
+  geom_point(aes(x = mpg, y = disp, color = cyl)) +  labs(title = "Comparison of Car Performance", x = "mpg", y = "displacement (cu.in)") 
+
+#you created two visuals which together answered the question (one contained the smoothed regression line while the other contained the different color points for each different number of cylinders; partial credit granted
 ```
 Question 17: Figure 2: Comparison of car performance based on displacement and number of cylinders and their effect on miles per gallon. (legend = number of cylinders)
 
